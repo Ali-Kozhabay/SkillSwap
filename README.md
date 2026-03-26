@@ -1,7 +1,7 @@
-# 🚀 SkillSwap — Peer-to-Peer Service Marketplace
+# SkillSwap — Peer-to-Peer Service Marketplace
 # Group members: Kozhabay Ali, Sakhan Zarina, Khurshitova Nazgul
 
-## 📌 Overview
+## Overview
 **SkillSwap** is a full-stack web application that allows users to offer and book services in a peer-to-peer marketplace.  
 The platform enables seamless interaction between service providers and clients through booking, messaging, and review systems.
 
