@@ -1,0 +1,13 @@
+skillswap-backend/db.sqlite3
+skillswap-backend/**/__pycache__/
+skillswap-backend/**/*.pyc
+skillswap-frontend/dist/
+skillswap-frontend/.angular/
+.DS_Store
+*.log
+.env
+.venv/
+skillswap-backend/.pytest_cache/
+skillswap-backend/venv/
+skillswap-frontend/coverage/
+skillswap-frontend/node_modules/

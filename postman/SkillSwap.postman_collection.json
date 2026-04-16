@@ -1,0 +1,719 @@
+{
+  "info": {
+    "_postman_id": "6b86d4de-4e13-4b15-b1b4-61d81a63493b",
+    "name": "SkillSwap API",
+    "description": "Postman collection for the SkillSwap Angular + Django project. Cookie-based JWT authentication is used, so keep the Postman cookie jar enabled after login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api"
+    },
+    {
+      "key": "categoryId",
+      "value": "1"
+    },
+    {
+      "key": "serviceId",
+      "value": "1"
+    },
+    {
+      "key": "bookingId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"demo12345\",\n  \"confirm_password\": \"demo12345\",\n  \"first_name\": \"New\",\n  \"last_name\": \"User\",\n  \"location\": \"Almaty\",\n  \"bio\": \"Product strategy and operations support\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/auth/register/",
+            "description": "Creates a new user and sets JWT cookies."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"demo12345\",\n  \"confirm_password\": \"demo12345\",\n  \"first_name\": \"New\",\n  \"last_name\": \"User\",\n  \"location\": \"Almaty\",\n  \"bio\": \"Product strategy and operations support\"\n}"
+                },
+                "url": "{{baseUrl}}/auth/register/"
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"user\": {\n    \"id\": 7,\n    \"username\": \"newuser\",\n    \"display_name\": \"New User\",\n    \"first_name\": \"New\",\n    \"last_name\": \"User\",\n    \"location\": \"Almaty\",\n    \"bio\": \"Product strategy and operations support\",\n    \"email\": \"newuser@example.com\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"alina\",\n  \"password\": \"demo12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/auth/login/",
+            "description": "Logs in and stores JWT cookies for later requests."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"alina\",\n  \"password\": \"demo12345\"\n}"
+                },
+                "url": "{{baseUrl}}/auth/login/"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"user\": {\n    \"id\": 1,\n    \"username\": \"alina\",\n    \"display_name\": \"Alina\",\n    \"first_name\": \"Alina\",\n    \"last_name\": \"\",\n    \"location\": \"Almaty\",\n    \"bio\": \"Operations and executive support\",\n    \"email\": \"alina@example.com\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh Session",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/auth/refresh/",
+            "description": "Uses the refresh cookie and returns a refreshed session message."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": "{{baseUrl}}/auth/refresh/"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"detail\": \"Session refreshed.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/auth/logout/",
+            "description": "Blacklists the refresh token when present and clears auth cookies."
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": "{{baseUrl}}/auth/logout/"
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me/",
+            "description": "Returns the currently authenticated user profile."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/auth/me/"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"username\": \"alina\",\n  \"display_name\": \"Alina\",\n  \"first_name\": \"Alina\",\n  \"last_name\": \"\",\n  \"location\": \"Almaty\",\n  \"bio\": \"Operations and executive support\",\n  \"email\": \"alina@example.com\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Services",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/categories/",
+            "description": "Returns all service categories."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/categories/"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Operations\",\n    \"slug\": \"operations\",\n    \"description\": \"Executive support, research, and delivery help\"\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Design\",\n    \"slug\": \"design\",\n    \"description\": \"Product and visual design services\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "List Services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/services/?search=ops&category=operations",
+            "description": "Lists active services and supports optional search/category filtering."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/services/?search=ops&category=operations"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 1,\n    \"title\": \"Executive operations support\",\n    \"summary\": \"Inbox triage, research, and delivery coordination\",\n    \"description\": \"I help founders and executives keep projects moving.\",\n    \"price\": \"25000.00\",\n    \"location\": \"Almaty\",\n    \"is_active\": true,\n    \"created_at\": \"2026-03-20T10:00:00Z\",\n    \"updated_at\": \"2026-03-20T10:00:00Z\",\n    \"owner\": {\n      \"id\": 2,\n      \"username\": \"timur\",\n      \"display_name\": \"Timur\",\n      \"first_name\": \"Timur\",\n      \"last_name\": \"\",\n      \"location\": \"Astana\",\n      \"bio\": \"Operations specialist\"\n    },\n    \"category\": {\n      \"id\": 1,\n      \"name\": \"Operations\",\n      \"slug\": \"operations\",\n      \"description\": \"Executive support, research, and delivery help\"\n    },\n    \"average_rating\": 4.8,\n    \"review_count\": 3,\n    \"can_book\": true\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create Service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": {{categoryId}},\n  \"title\": \"Remote executive assistant support\",\n  \"summary\": \"Structured async support for founders and small teams\",\n  \"description\": \"I handle inbox clean-up, meeting prep, research, and follow-up workflows.\",\n  \"price\": \"30000.00\",\n  \"location\": \"Remote\",\n  \"is_active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/services/",
+            "description": "Creates a new service linked to the authenticated user."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"category\": {{categoryId}},\n  \"title\": \"Remote executive assistant support\",\n  \"summary\": \"Structured async support for founders and small teams\",\n  \"description\": \"I handle inbox clean-up, meeting prep, research, and follow-up workflows.\",\n  \"price\": \"30000.00\",\n  \"location\": \"Remote\",\n  \"is_active\": true\n}"
+                },
+                "url": "{{baseUrl}}/services/"
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 5,\n  \"title\": \"Remote executive assistant support\",\n  \"summary\": \"Structured async support for founders and small teams\",\n  \"description\": \"I handle inbox clean-up, meeting prep, research, and follow-up workflows.\",\n  \"price\": \"30000.00\",\n  \"location\": \"Remote\",\n  \"is_active\": true,\n  \"created_at\": \"2026-03-28T08:30:00Z\",\n  \"updated_at\": \"2026-03-28T08:30:00Z\",\n  \"owner\": {\n    \"id\": 1,\n    \"username\": \"alina\",\n    \"display_name\": \"Alina\",\n    \"first_name\": \"Alina\",\n    \"last_name\": \"\",\n    \"location\": \"Almaty\",\n    \"bio\": \"Operations and executive support\"\n  },\n  \"category\": {\n    \"id\": 1,\n    \"name\": \"Operations\",\n    \"slug\": \"operations\",\n    \"description\": \"Executive support, research, and delivery help\"\n  },\n  \"average_rating\": null,\n  \"review_count\": 0,\n  \"can_book\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "Service Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/services/{{serviceId}}/",
+            "description": "Returns a single service including reviews."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/services/{{serviceId}}/"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"title\": \"Executive operations support\",\n  \"summary\": \"Inbox triage, research, and delivery coordination\",\n  \"description\": \"I help founders and executives keep projects moving.\",\n  \"price\": \"25000.00\",\n  \"location\": \"Almaty\",\n  \"is_active\": true,\n  \"created_at\": \"2026-03-20T10:00:00Z\",\n  \"updated_at\": \"2026-03-20T10:00:00Z\",\n  \"owner\": {\n    \"id\": 2,\n    \"username\": \"timur\",\n    \"display_name\": \"Timur\",\n    \"first_name\": \"Timur\",\n    \"last_name\": \"\",\n    \"location\": \"Astana\",\n    \"bio\": \"Operations specialist\"\n  },\n  \"category\": {\n    \"id\": 1,\n    \"name\": \"Operations\",\n    \"slug\": \"operations\",\n    \"description\": \"Executive support, research, and delivery help\"\n  },\n  \"average_rating\": 4.8,\n  \"review_count\": 3,\n  \"can_book\": true,\n  \"reviews\": [\n    {\n      \"id\": 1,\n      \"rating\": 5,\n      \"comment\": \"Clear communication and fast delivery.\",\n      \"created_at\": \"2026-03-24T14:40:00Z\",\n      \"reviewer\": {\n        \"id\": 1,\n        \"username\": \"alina\",\n        \"display_name\": \"Alina\",\n        \"first_name\": \"Alina\",\n        \"last_name\": \"\",\n        \"location\": \"Almaty\",\n        \"bio\": \"Operations and executive support\"\n      }\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "My Services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/services/mine/",
+            "description": "Returns the authenticated user's services."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/services/mine/"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 5,\n    \"title\": \"Remote executive assistant support\",\n    \"summary\": \"Structured async support for founders and small teams\",\n    \"description\": \"I handle inbox clean-up, meeting prep, research, and follow-up workflows.\",\n    \"price\": \"30000.00\",\n    \"location\": \"Remote\",\n    \"is_active\": true,\n    \"created_at\": \"2026-03-28T08:30:00Z\",\n    \"updated_at\": \"2026-03-28T08:30:00Z\",\n    \"owner\": {\n      \"id\": 1,\n      \"username\": \"alina\",\n      \"display_name\": \"Alina\",\n      \"first_name\": \"Alina\",\n      \"last_name\": \"\",\n      \"location\": \"Almaty\",\n      \"bio\": \"Operations and executive support\"\n    },\n    \"category\": {\n      \"id\": 1,\n      \"name\": \"Operations\",\n      \"slug\": \"operations\",\n      \"description\": \"Executive support, research, and delivery help\"\n    },\n    \"average_rating\": null,\n    \"review_count\": 0,\n    \"can_book\": false\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": {{serviceId}},\n  \"scheduled_for\": \"2026-04-05T10:00:00Z\",\n  \"note\": \"Need coordination help for a launch week.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/bookings/",
+            "description": "Creates a booking linked to request.user as the client."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"service\": {{serviceId}},\n  \"scheduled_for\": \"2026-04-05T10:00:00Z\",\n  \"note\": \"Need coordination help for a launch week.\"\n}"
+                },
+                "url": "{{baseUrl}}/bookings/"
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 9,\n  \"service\": {\n    \"id\": 1,\n    \"title\": \"Executive operations support\",\n    \"summary\": \"Inbox triage, research, and delivery coordination\",\n    \"description\": \"I help founders and executives keep projects moving.\",\n    \"price\": \"25000.00\",\n    \"location\": \"Almaty\",\n    \"is_active\": true,\n    \"created_at\": \"2026-03-20T10:00:00Z\",\n    \"updated_at\": \"2026-03-20T10:00:00Z\",\n    \"owner\": {\n      \"id\": 2,\n      \"username\": \"timur\",\n      \"display_name\": \"Timur\",\n      \"first_name\": \"Timur\",\n      \"last_name\": \"\",\n      \"location\": \"Astana\",\n      \"bio\": \"Operations specialist\"\n    },\n    \"category\": {\n      \"id\": 1,\n      \"name\": \"Operations\",\n      \"slug\": \"operations\",\n      \"description\": \"Executive support, research, and delivery help\"\n    },\n    \"average_rating\": 4.8,\n    \"review_count\": 3,\n    \"can_book\": true\n  },\n  \"client\": {\n    \"id\": 1,\n    \"username\": \"alina\",\n    \"display_name\": \"Alina\",\n    \"first_name\": \"Alina\",\n    \"last_name\": \"\",\n    \"location\": \"Almaty\",\n    \"bio\": \"Operations and executive support\"\n  },\n  \"provider\": {\n    \"id\": 2,\n    \"username\": \"timur\",\n    \"display_name\": \"Timur\",\n    \"first_name\": \"Timur\",\n    \"last_name\": \"\",\n    \"location\": \"Astana\",\n    \"bio\": \"Operations specialist\"\n  },\n  \"status\": \"pending\",\n  \"provider_completion_confirmed\": false,\n  \"client_completion_confirmed\": false,\n  \"scheduled_for\": \"2026-04-05T10:00:00Z\",\n  \"note\": \"Need coordination help for a launch week.\",\n  \"created_at\": \"2026-03-28T09:00:00Z\",\n  \"updated_at\": \"2026-03-28T09:00:00Z\",\n  \"user_role\": \"client\",\n  \"can_review\": false,\n  \"review\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "My Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/my/",
+            "description": "Returns bookings where the user is either a client or provider."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/bookings/my/"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"as_client\": [\n    {\n      \"id\": 9,\n      \"service\": {\n        \"id\": 1,\n        \"title\": \"Executive operations support\",\n        \"summary\": \"Inbox triage, research, and delivery coordination\",\n        \"description\": \"I help founders and executives keep projects moving.\",\n        \"price\": \"25000.00\",\n        \"location\": \"Almaty\",\n        \"is_active\": true,\n        \"created_at\": \"2026-03-20T10:00:00Z\",\n        \"updated_at\": \"2026-03-20T10:00:00Z\",\n        \"owner\": {\n          \"id\": 2,\n          \"username\": \"timur\",\n          \"display_name\": \"Timur\",\n          \"first_name\": \"Timur\",\n          \"last_name\": \"\",\n          \"location\": \"Astana\",\n          \"bio\": \"Operations specialist\"\n        },\n        \"category\": {\n          \"id\": 1,\n          \"name\": \"Operations\",\n          \"slug\": \"operations\",\n          \"description\": \"Executive support, research, and delivery help\"\n        },\n        \"average_rating\": 4.8,\n        \"review_count\": 3,\n        \"can_book\": true\n      },\n      \"client\": {\n        \"id\": 1,\n        \"username\": \"alina\",\n        \"display_name\": \"Alina\",\n        \"first_name\": \"Alina\",\n        \"last_name\": \"\",\n        \"location\": \"Almaty\",\n        \"bio\": \"Operations and executive support\"\n      },\n      \"provider\": {\n        \"id\": 2,\n        \"username\": \"timur\",\n        \"display_name\": \"Timur\",\n        \"first_name\": \"Timur\",\n        \"last_name\": \"\",\n        \"location\": \"Astana\",\n        \"bio\": \"Operations specialist\"\n      },\n      \"status\": \"accepted\",\n      \"provider_completion_confirmed\": false,\n      \"client_completion_confirmed\": false,\n      \"scheduled_for\": \"2026-04-05T10:00:00Z\",\n      \"note\": \"Need coordination help for a launch week.\",\n      \"created_at\": \"2026-03-28T09:00:00Z\",\n      \"updated_at\": \"2026-03-28T09:00:00Z\",\n      \"user_role\": \"client\",\n      \"can_review\": false,\n      \"review\": null\n    }\n  ],\n  \"as_provider\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Booking Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/",
+            "description": "Returns one booking for a booking participant."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/bookings/{{bookingId}}/"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 9,\n  \"service\": {\n    \"id\": 1,\n    \"title\": \"Executive operations support\",\n    \"summary\": \"Inbox triage, research, and delivery coordination\",\n    \"description\": \"I help founders and executives keep projects moving.\",\n    \"price\": \"25000.00\",\n    \"location\": \"Almaty\",\n    \"is_active\": true,\n    \"created_at\": \"2026-03-20T10:00:00Z\",\n    \"updated_at\": \"2026-03-20T10:00:00Z\",\n    \"owner\": {\n      \"id\": 2,\n      \"username\": \"timur\",\n      \"display_name\": \"Timur\",\n      \"first_name\": \"Timur\",\n      \"last_name\": \"\",\n      \"location\": \"Astana\",\n      \"bio\": \"Operations specialist\"\n    },\n    \"category\": {\n      \"id\": 1,\n      \"name\": \"Operations\",\n      \"slug\": \"operations\",\n      \"description\": \"Executive support, research, and delivery help\"\n    },\n    \"average_rating\": 4.8,\n    \"review_count\": 3,\n    \"can_book\": true\n  },\n  \"client\": {\n    \"id\": 1,\n    \"username\": \"alina\",\n    \"display_name\": \"Alina\",\n    \"first_name\": \"Alina\",\n    \"last_name\": \"\",\n    \"location\": \"Almaty\",\n    \"bio\": \"Operations and executive support\"\n  },\n  \"provider\": {\n    \"id\": 2,\n    \"username\": \"timur\",\n    \"display_name\": \"Timur\",\n    \"first_name\": \"Timur\",\n    \"last_name\": \"\",\n    \"location\": \"Astana\",\n    \"bio\": \"Operations specialist\"\n  },\n  \"status\": \"accepted\",\n  \"provider_completion_confirmed\": false,\n  \"client_completion_confirmed\": false,\n  \"scheduled_for\": \"2026-04-05T10:00:00Z\",\n  \"note\": \"Need coordination help for a launch week.\",\n  \"created_at\": \"2026-03-28T09:00:00Z\",\n  \"updated_at\": \"2026-03-28T09:00:00Z\",\n  \"user_role\": \"client\",\n  \"can_review\": false,\n  \"review\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Booking Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/status/",
+            "description": "Accepts a pending booking or moves an accepted booking through completion confirmation."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"accepted\"\n}"
+                },
+                "url": "{{baseUrl}}/bookings/{{bookingId}}/status/"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 9,\n  \"service\": {\n    \"id\": 1,\n    \"title\": \"Executive operations support\",\n    \"summary\": \"Inbox triage, research, and delivery coordination\",\n    \"description\": \"I help founders and executives keep projects moving.\",\n    \"price\": \"25000.00\",\n    \"location\": \"Almaty\",\n    \"is_active\": true,\n    \"created_at\": \"2026-03-20T10:00:00Z\",\n    \"updated_at\": \"2026-03-20T10:00:00Z\",\n    \"owner\": {\n      \"id\": 2,\n      \"username\": \"timur\",\n      \"display_name\": \"Timur\",\n      \"first_name\": \"Timur\",\n      \"last_name\": \"\",\n      \"location\": \"Astana\",\n      \"bio\": \"Operations specialist\"\n    },\n    \"category\": {\n      \"id\": 1,\n      \"name\": \"Operations\",\n      \"slug\": \"operations\",\n      \"description\": \"Executive support, research, and delivery help\"\n    },\n    \"average_rating\": 4.8,\n    \"review_count\": 3,\n    \"can_book\": true\n  },\n  \"client\": {\n    \"id\": 1,\n    \"username\": \"alina\",\n    \"display_name\": \"Alina\",\n    \"first_name\": \"Alina\",\n    \"last_name\": \"\",\n    \"location\": \"Almaty\",\n    \"bio\": \"Operations and executive support\"\n  },\n  \"provider\": {\n    \"id\": 2,\n    \"username\": \"timur\",\n    \"display_name\": \"Timur\",\n    \"first_name\": \"Timur\",\n    \"last_name\": \"\",\n    \"location\": \"Astana\",\n    \"bio\": \"Operations specialist\"\n  },\n  \"status\": \"accepted\",\n  \"provider_completion_confirmed\": false,\n  \"client_completion_confirmed\": false,\n  \"scheduled_for\": \"2026-04-05T10:00:00Z\",\n  \"note\": \"Need coordination help for a launch week.\",\n  \"created_at\": \"2026-03-28T09:00:00Z\",\n  \"updated_at\": \"2026-03-28T09:03:00Z\",\n  \"user_role\": \"provider\",\n  \"can_review\": false,\n  \"review\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Booking Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/messages/",
+            "description": "Lists chat messages for a booking participant."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/bookings/{{bookingId}}/messages/"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 3,\n    \"booking\": 9,\n    \"sender\": {\n      \"id\": 1,\n      \"username\": \"alina\",\n      \"display_name\": \"Alina\",\n      \"first_name\": \"Alina\",\n      \"last_name\": \"\",\n      \"location\": \"Almaty\",\n      \"bio\": \"Operations and executive support\"\n    },\n    \"text\": \"Sharing the scope and deadline here.\",\n    \"created_at\": \"2026-03-28T09:10:00Z\"\n  },\n  {\n    \"id\": 4,\n    \"booking\": 9,\n    \"sender\": {\n      \"id\": 2,\n      \"username\": \"timur\",\n      \"display_name\": \"Timur\",\n      \"first_name\": \"Timur\",\n      \"last_name\": \"\",\n      \"location\": \"Astana\",\n      \"bio\": \"Operations specialist\"\n    },\n    \"text\": \"Got it. I will send an update this afternoon.\",\n    \"created_at\": \"2026-03-28T09:12:00Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking\": {{bookingId}},\n  \"text\": \"Can you send a delivery update by 5 PM?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/messages/",
+            "description": "Creates a new message in a booking thread."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"booking\": {{bookingId}},\n  \"text\": \"Can you send a delivery update by 5 PM?\"\n}"
+                },
+                "url": "{{baseUrl}}/messages/"
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 5,\n  \"booking\": 9,\n  \"sender\": {\n    \"id\": 1,\n    \"username\": \"alina\",\n    \"display_name\": \"Alina\",\n    \"first_name\": \"Alina\",\n    \"last_name\": \"\",\n    \"location\": \"Almaty\",\n    \"bio\": \"Operations and executive support\"\n  },\n  \"text\": \"Can you send a delivery update by 5 PM?\",\n  \"created_at\": \"2026-03-28T09:15:00Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking\": {{bookingId}},\n  \"rating\": 5,\n  \"comment\": \"Clear communication and reliable delivery.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/reviews/",
+            "description": "Creates one review for a completed booking."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"booking\": {{bookingId}},\n  \"rating\": 5,\n  \"comment\": \"Clear communication and reliable delivery.\"\n}"
+                },
+                "url": "{{baseUrl}}/reviews/"
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 6,\n  \"rating\": 5,\n  \"comment\": \"Clear communication and reliable delivery.\",\n  \"created_at\": \"2026-03-28T09:30:00Z\",\n  \"reviewer\": {\n    \"id\": 1,\n    \"username\": \"alina\",\n    \"display_name\": \"Alina\",\n    \"first_name\": \"Alina\",\n    \"last_name\": \"\",\n    \"location\": \"Almaty\",\n    \"bio\": \"Operations and executive support\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
