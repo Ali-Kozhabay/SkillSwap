@@ -119,6 +119,7 @@ class ServiceWriteSerializer(serializers.ModelSerializer):
 
 class BookingReadSerializer(serializers.ModelSerializer):
     service = ServiceReadSerializer(read_only=True)
+    offered_service = ServiceReadSerializer(read_only=True)
     client = UserSummarySerializer(read_only=True)
     provider = serializers.SerializerMethodField()
     provider_completion_confirmed = serializers.SerializerMethodField()
@@ -132,6 +133,8 @@ class BookingReadSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "service",
+            "compensation_type",
+            "offered_service",
             "client",
             "provider",
             "status",
@@ -183,7 +186,7 @@ class BookingStatusUpdateSerializer(serializers.Serializer):
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ["service", "scheduled_for", "note"]
+        fields = ["service", "scheduled_for", "note", "compensation_type", "offered_service"]
 
     def validate_service(self, service: Service) -> Service:
         request = self.context["request"]
@@ -198,9 +201,33 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Pick a date in the future.")
         return value
 
+    def validate_note(self, value: str) -> str:
+        return strip_optional_text(value)
+
     def validate(self, attrs: dict) -> dict:
         request = self.context["request"]
         service = attrs["service"]
+        compensation_type = attrs.get("compensation_type", Booking.CompensationType.MONEY)
+        offered_service = attrs.get("offered_service")
+
+        if compensation_type == Booking.CompensationType.SERVICE:
+            if not offered_service:
+                raise serializers.ValidationError(
+                    {"offered_service": "Choose one of your services to offer for the swap."}
+                )
+            if offered_service.owner_id != request.user.id:
+                raise serializers.ValidationError(
+                    {"offered_service": "You can only offer one of your own services."}
+                )
+            if not offered_service.is_active:
+                raise serializers.ValidationError(
+                    {"offered_service": "Only active services can be offered in a swap."}
+                )
+        elif offered_service is not None:
+            raise serializers.ValidationError(
+                {"offered_service": "Remove the offered service or switch to a service swap."}
+            )
+
         has_active_booking = Booking.objects.filter(
             client=request.user,
             service=service,

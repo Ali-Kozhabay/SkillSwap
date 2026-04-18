@@ -8,6 +8,7 @@ import { formatApiError } from '../core/api-error';
 import { AuthService } from '../core/auth.service';
 import { Booking, Category, MyBookingsResponse, Service } from '../core/models';
 import { MarketplaceService } from '../core/marketplace.service';
+import { renderStars } from '../core/rating';
 
 type ReviewDraft = {
   rating: number;
@@ -120,7 +121,6 @@ type ReviewDraft = {
 
           <div class="actions-row">
             <a class="primary-button" routerLink="/dashboard/services/new">Create service</a>
-            <span class="metric-pill">Opens a full-page builder</span>
           </div>
         </div>
       </section>
@@ -200,10 +200,6 @@ type ReviewDraft = {
 
               <div class="meta-grid">
                 <div>
-                  <span class="meta-label">Scheduled for</span>
-                  <p>{{ booking.scheduled_for ? (booking.scheduled_for | date:'medium') : 'Flexible schedule' }}</p>
-                </div>
-                <div>
                   <span class="meta-label">Created</span>
                   <p>{{ booking.created_at | date:'mediumDate' }}</p>
                 </div>
@@ -212,12 +208,27 @@ type ReviewDraft = {
                   <p>{{ booking.note || 'No booking note provided.' }}</p>
                 </div>
                 <div>
+                  <span class="meta-label">Compensation</span>
+                  @if (booking.compensation_type === 'service') {
+                    <p>
+                      {{ booking.offered_service?.title || 'Service swap offer attached.' }}
+                    </p>
+                  } @else {
+                    <p>{{ booking.service.price | currency:'KZT ':'symbol':'1.0-0' }}</p>
+                  }
+                </div>
+                <div>
                   <span class="meta-label">Completion</span>
                   <p>{{ providerCompletionSummary(booking) }}</p>
                 </div>
               </div>
 
               <div class="actions-row">
+                @if (booking.compensation_type === 'service' && booking.offered_service) {
+                  <a class="link-chip" [routerLink]="['/service', booking.offered_service.id]">
+                    View offered service
+                  </a>
+                }
                 <a class="ghost-button" [routerLink]="['/chat', booking.id]">Open chat</a>
                 @if (booking.status === 'pending') {
                   <button class="primary-button" type="button" (click)="changeBookingStatus(booking, 'accepted')">
@@ -294,16 +305,22 @@ type ReviewDraft = {
 
               <div class="meta-grid">
                 <div>
-                  <span class="meta-label">Scheduled for</span>
-                  <p>{{ booking.scheduled_for ? (booking.scheduled_for | date:'medium') : 'Flexible schedule' }}</p>
-                </div>
-                <div>
                   <span class="meta-label">Price</span>
                   <p>{{ booking.service.price | currency:'KZT ':'symbol':'1.0-0' }}</p>
                 </div>
                 <div>
                   <span class="meta-label">Note</span>
                   <p>{{ booking.note || 'No booking note provided.' }}</p>
+                </div>
+                <div>
+                  <span class="meta-label">Compensation</span>
+                  @if (booking.compensation_type === 'service') {
+                    <p>
+                      {{ booking.offered_service?.title || 'Service swap offer attached.' }}
+                    </p>
+                  } @else {
+                    <p>{{ booking.service.price | currency:'KZT ':'symbol':'1.0-0' }}</p>
+                  }
                 </div>
                 <div>
                   <span class="meta-label">Completion</span>
@@ -316,6 +333,11 @@ type ReviewDraft = {
               </div>
 
               <div class="actions-row">
+                @if (booking.compensation_type === 'service' && booking.offered_service) {
+                  <a class="link-chip" [routerLink]="['/service', booking.offered_service.id]">
+                    Open offered service
+                  </a>
+                }
                 <a class="ghost-button" [routerLink]="['/chat', booking.id]">Open chat</a>
                 @if (booking.status === 'accepted' && booking.provider_completion_confirmed) {
                   <button class="secondary-button" type="button" (click)="changeBookingStatus(booking, 'completed')">
@@ -328,25 +350,28 @@ type ReviewDraft = {
 
               @if (booking.review) {
                 <div class="review-inline">
-                  <strong>Your review: {{ booking.review.rating }}/5</strong>
+                  <strong>Your review: {{ renderStars(booking.review.rating) }}</strong>
                   <p>{{ booking.review.comment || 'No written comment provided.' }}</p>
                 </div>
               } @else if (booking.can_review) {
                 <form class="review-form" (ngSubmit)="submitReview(booking.id)">
                   <div class="grid-2">
                     <div class="field">
-                      <label [for]="'rating-' + booking.id">Rating</label>
-                      <select
-                        [id]="'rating-' + booking.id"
-                        [name]="'rating-' + booking.id"
-                        [(ngModel)]="reviewDraft(booking.id).rating"
-                      >
-                        <option [ngValue]="5">5</option>
-                        <option [ngValue]="4">4</option>
-                        <option [ngValue]="3">3</option>
-                        <option [ngValue]="2">2</option>
-                        <option [ngValue]="1">1</option>
-                      </select>
+                      <label>Rating</label>
+                      <div class="rating-selector" [attr.aria-label]="'Rating for booking ' + booking.id">
+                        @for (star of ratingOptions; track star) {
+                          <button
+                            class="rating-star-button"
+                            type="button"
+                            [class.is-active]="star <= reviewDraft(booking.id).rating"
+                            [attr.aria-label]="'Set rating to ' + star + ' stars'"
+                            (click)="setReviewRating(booking.id, star)"
+                          >
+                            ★
+                          </button>
+                        }
+                      </div>
+                      <p class="field-note">{{ renderStars(reviewDraft(booking.id).rating) }}</p>
                     </div>
                   </div>
 
@@ -404,6 +429,8 @@ export class DashboardPageComponent {
   private readonly router = inject(Router);
   readonly pageSize = 10;
   readonly auth = inject(AuthService);
+  readonly ratingOptions = [1, 2, 3, 4, 5];
+  readonly renderStars = renderStars;
 
   readonly categories = signal<Category[]>([]);
   readonly myServices = signal<Service[]>([]);
@@ -480,6 +507,10 @@ export class DashboardPageComponent {
   reviewDraft(bookingId: number): ReviewDraft {
     this.reviewDrafts[bookingId] ??= { rating: 5, comment: '' };
     return this.reviewDrafts[bookingId];
+  }
+
+  setReviewRating(bookingId: number, rating: number): void {
+    this.reviewDraft(bookingId).rating = rating;
   }
 
   providerCompletionSummary(booking: Booking): string {

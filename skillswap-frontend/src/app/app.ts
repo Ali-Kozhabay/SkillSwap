@@ -12,6 +12,7 @@ import { AuthService } from './core/auth.service';
 })
 export class App {
   readonly auth = inject(AuthService);
+  readonly currentYear = new Date().getFullYear();
 
   logout(): void {
     this.auth.logout();

@@ -1,3 +1,5 @@
+from difflib import SequenceMatcher
+
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch, Q
@@ -28,10 +30,103 @@ def service_queryset():
     return Service.objects.select_related("owner", "category")
 
 
+def normalize_search_text(value: str) -> str:
+    return " ".join("".join(ch.lower() if ch.isalnum() else " " for ch in value).split())
+
+
+def best_window_similarity(
+    normalized_query: str, candidate_tokens: list[str], query_token_count: int
+) -> float:
+    if not candidate_tokens:
+        return 0.0
+
+    best_score = 0.0
+    window_sizes = {
+        max(1, query_token_count - 1),
+        query_token_count,
+        min(len(candidate_tokens), query_token_count + 1),
+    }
+
+    for window_size in window_sizes:
+        if window_size >= len(candidate_tokens):
+            window_text = " ".join(candidate_tokens)
+            best_score = max(best_score, SequenceMatcher(None, normalized_query, window_text).ratio())
+            continue
+
+        for start in range(len(candidate_tokens) - window_size + 1):
+            window_text = " ".join(candidate_tokens[start : start + window_size])
+            best_score = max(
+                best_score,
+                SequenceMatcher(None, normalized_query, window_text).ratio(),
+            )
+
+    return best_score
+
+
+def fuzzy_field_score(normalized_query: str, query_tokens: list[str], candidate_text: str) -> float:
+    normalized_candidate = normalize_search_text(candidate_text)
+    if not normalized_candidate:
+        return 0.0
+
+    if normalized_query in normalized_candidate:
+        return 1.0
+
+    candidate_tokens = normalized_candidate.split()
+    token_scores = []
+    for query_token in query_tokens:
+        best_token_score = 0.0
+        for candidate_token in candidate_tokens:
+            token_score = SequenceMatcher(None, query_token, candidate_token).ratio()
+            shortest_token_length = min(len(query_token), len(candidate_token))
+            starts_with_match = (
+                shortest_token_length >= 4
+                and (
+                    query_token.startswith(candidate_token)
+                    or candidate_token.startswith(query_token)
+                )
+            )
+            if starts_with_match:
+                token_score = max(token_score, 0.9)
+            best_token_score = max(best_token_score, token_score)
+        token_scores.append(best_token_score)
+
+    average_token_score = sum(token_scores) / len(token_scores)
+    phrase_score = SequenceMatcher(None, normalized_query, normalized_candidate).ratio()
+    window_score = best_window_similarity(normalized_query, candidate_tokens, len(query_tokens))
+    return max(average_token_score, phrase_score * 0.82, window_score * 0.96)
+
+
+def service_search_score(normalized_query: str, query_tokens: list[str], service: Service) -> float:
+    searchable_fields = [
+        service.title,
+        service.summary,
+        service.description,
+        service.category.name,
+        service.category.description,
+        service.owner.display_name,
+        service.owner.username,
+    ]
+    return max(
+        fuzzy_field_score(normalized_query, query_tokens, field)
+        for field in searchable_fields
+    )
+
+
+def minimum_search_score(query_tokens: list[str]) -> float:
+    longest_token = max((len(token) for token in query_tokens), default=0)
+    if len(query_tokens) == 1 and longest_token <= 3:
+        return 0.95
+    if len(query_tokens) == 1 and longest_token <= 5:
+        return 0.84
+    return 0.72
+
+
 def booking_queryset():
     return Booking.objects.select_related(
         "service__owner",
         "service__category",
+        "offered_service__owner",
+        "offered_service__category",
         "client",
     ).prefetch_related(
         Prefetch(
@@ -72,14 +167,28 @@ class ServiceListCreateView(generics.ListCreateAPIView):
         search = filters.validated_data.get("search", "")
         category = filters.validated_data.get("category", "")
 
-        if search:
-            queryset = queryset.filter(Q(title__icontains=search) | Q(summary__icontains=search))
         if category:
             if category.isdigit():
                 queryset = queryset.filter(category_id=int(category))
             else:
                 queryset = queryset.filter(category__slug=category)
-        return queryset
+        if not search:
+            return queryset
+
+        normalized_search = normalize_search_text(search)
+        if not normalized_search:
+            return queryset
+
+        query_tokens = normalized_search.split()
+        threshold = minimum_search_score(query_tokens)
+        scored_services = []
+        for service in queryset:
+            score = service_search_score(normalized_search, query_tokens, service)
+            if score >= threshold:
+                scored_services.append((score, service))
+
+        scored_services.sort(key=lambda item: (item[0], item[1].created_at), reverse=True)
+        return [service for _, service in scored_services]
 
     def get_serializer_class(self):
         if self.request.method == "POST":

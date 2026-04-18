@@ -48,9 +48,13 @@ export interface ServiceDetail extends Service {
   reviews: Review[];
 }
 
+export type BookingCompensationType = 'money' | 'service';
+
 export interface Booking {
   id: number;
   service: Service;
+  compensation_type: BookingCompensationType;
+  offered_service: Service | null;
   client: UserSummary;
   provider: UserSummary;
   status: 'pending' | 'accepted' | 'completed';
@@ -110,7 +114,8 @@ export interface ServiceWritePayload {
 
 export interface BookingCreatePayload {
   service: number;
-  scheduled_for: string | null;
+  compensation_type: BookingCompensationType;
+  offered_service: number | null;
   note: string;
 }
 

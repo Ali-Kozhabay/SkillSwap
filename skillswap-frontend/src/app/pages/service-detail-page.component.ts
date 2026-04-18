@@ -1,13 +1,20 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 
 import { formatApiError } from '../core/api-error';
 import { AuthService } from '../core/auth.service';
-import { Category, ServiceDetail, ServiceWritePayload } from '../core/models';
+import {
+  BookingCompensationType,
+  Category,
+  Service,
+  ServiceDetail,
+  ServiceWritePayload,
+} from '../core/models';
 import { MarketplaceService } from '../core/marketplace.service';
+import { renderStars } from '../core/rating';
 
 @Component({
   selector: 'app-service-detail-page',
@@ -47,8 +54,15 @@ import { MarketplaceService } from '../core/marketplace.service';
                 <span>Starting price</span>
               </div>
               <div class="metric-card">
-                <strong>{{ currentService.average_rating ?? 'New' }}</strong>
-                <span>Average rating</span>
+                @if (currentService.average_rating !== null) {
+                  <strong class="rating-stars rating-stars-lg">
+                    {{ renderStars(currentService.average_rating) }}
+                  </strong>
+                  <span>{{ currentService.average_rating | number:'1.1-1' }} average</span>
+                } @else {
+                  <strong>New</strong>
+                  <span>No reviews yet</span>
+                }
               </div>
               <div class="metric-card">
                 <strong>{{ currentService.review_count }}</strong>
@@ -92,8 +106,8 @@ import { MarketplaceService } from '../core/marketplace.service';
                 <p class="eyebrow">Ready to book?</p>
                 <h2>{{ currentService.price | currency:'KZT ':'symbol':'1.0-0' }}</h2>
                 <p class="muted">
-                  Book this service, keep all messages in the booking chat, and review it
-                  once the work is completed.
+                  Book this service, pay with money or offer one of your own listings in exchange,
+                  keep all messages in the booking chat, and review it once the work is completed.
                 </p>
               </div>
 
@@ -107,14 +121,69 @@ import { MarketplaceService } from '../core/marketplace.service';
               } @else {
                 <form class="stack-lg service-booking-form" (ngSubmit)="bookService()">
                   <div class="field">
-                    <label for="booking-date">Preferred date</label>
-                    <input
-                      id="booking-date"
-                      type="datetime-local"
-                      name="bookingDate"
-                      [(ngModel)]="bookingForm.scheduled_for"
-                    />
+                    <label>How do you want to pay?</label>
+                    <div class="booking-mode-grid">
+                      <label
+                        class="booking-mode-card"
+                        [class.is-selected]="bookingForm.compensation_type === 'money'"
+                      >
+                        <input
+                          class="booking-mode-input"
+                          type="radio"
+                          name="bookingCompensationType"
+                          [(ngModel)]="bookingForm.compensation_type"
+                          [value]="'money'"
+                        />
+                        <span>Pay with money</span>
+                        <small>
+                          Book at
+                          {{ currentService.price | currency:'KZT ':'symbol':'1.0-0' }}.
+                        </small>
+                      </label>
+
+                      <label
+                        class="booking-mode-card"
+                        [class.is-selected]="bookingForm.compensation_type === 'service'"
+                        [class.is-disabled]="!hasExchangeOfferOptions()"
+                      >
+                        <input
+                          class="booking-mode-input"
+                          type="radio"
+                          name="bookingCompensationType"
+                          [(ngModel)]="bookingForm.compensation_type"
+                          [value]="'service'"
+                          [disabled]="!hasExchangeOfferOptions()"
+                        />
+                        <span>Offer one of your services</span>
+                        <small>
+                          @if (hasExchangeOfferOptions()) {
+                            Propose an active listing instead of paying cash.
+                          } @else {
+                            Create an active listing first if you want to request a swap.
+                          }
+                        </small>
+                      </label>
+                    </div>
                   </div>
+
+                  @if (bookingForm.compensation_type === 'service') {
+                    <div class="field">
+                      <label for="booking-offered-service">Service to offer</label>
+                      <select
+                        id="booking-offered-service"
+                        name="bookingOfferedService"
+                        [(ngModel)]="bookingForm.offered_service"
+                      >
+                        <option [ngValue]="null" disabled>Select an active service</option>
+                        @for (offeredService of availableExchangeServices(); track offeredService.id) {
+                          <option [ngValue]="offeredService.id">
+                            {{ offeredService.title }} •
+                            {{ offeredService.price | currency:'KZT ':'symbol':'1.0-0' }}
+                          </option>
+                        }
+                      </select>
+                    </div>
+                  }
 
                   <div class="field">
                     <label for="booking-note">Project note</label>
@@ -128,7 +197,17 @@ import { MarketplaceService } from '../core/marketplace.service';
 
                   <p class="field-note">
                     Give a short scope or expected outcome so the provider can accept faster.
+                    @if (bookingForm.compensation_type === 'service') {
+                      Mention what makes the offered service a fair swap.
+                    }
                   </p>
+
+                  @if (bookingForm.compensation_type === 'service' && !hasExchangeOfferOptions()) {
+                    <p class="field-note">
+                      You need an active listing before you can offer a service swap.
+                      <a routerLink="/dashboard/services/new"><strong>Create a service</strong></a>
+                    </p>
+                  }
 
                   <button class="primary-button" type="submit" [disabled]="bookingBusy()">
                     {{ bookingBusy() ? 'Sending request...' : 'Request booking' }}
@@ -239,21 +318,6 @@ import { MarketplaceService } from '../core/marketplace.service';
             </form>
           </section>
 
-        } @else {
-          <div class="detail-layout">
-            <aside class="panel soft stack-lg">
-              <div class="stack-md">
-                <p class="eyebrow">Why clients and executives use SkillSwap</p>
-                <h2>A booking stays connected from discovery to delivery.</h2>
-              </div>
-              <p class="muted">
-                Whether the request starts with a client brief or an executive ask, the provider
-                can accept it, chat stays limited to both participants, and the review only
-                unlocks after the work is marked complete.
-              </p>
-              <a class="secondary-button" routerLink="/services">Browse more services</a>
-            </aside>
-          </div>
         }
 
         <section class="section-shell">
@@ -281,7 +345,7 @@ import { MarketplaceService } from '../core/marketplace.service';
                     <p class="muted">{{ review.created_at | date:'medium' }}</p>
                   </div>
                 </div>
-                <div class="badge">{{ review.rating }}/5</div>
+                <div class="badge rating-badge">{{ renderStars(review.rating) }}</div>
                 <p>{{ review.comment || 'No written comment provided.' }}</p>
               </article>
             }
@@ -302,16 +366,26 @@ export class ServiceDetailPageComponent {
   private readonly router = inject(Router);
   private readonly api = inject(MarketplaceService);
   readonly auth = inject(AuthService);
+  readonly renderStars = renderStars;
 
   readonly service = signal<ServiceDetail | null>(null);
   readonly categories = signal<Category[]>([]);
+  readonly myServices = signal<Service[]>([]);
   readonly error = signal('');
   readonly success = signal('');
   readonly bookingBusy = signal(false);
   readonly saving = signal(false);
+  readonly availableExchangeServices = computed(() => {
+    const currentServiceId = this.service()?.id;
+    return this.myServices().filter(
+      (service) => service.is_active && service.id !== currentServiceId,
+    );
+  });
+  readonly hasExchangeOfferOptions = computed(() => this.availableExchangeServices().length > 0);
 
   readonly bookingForm = {
-    scheduled_for: '',
+    compensation_type: 'money' as BookingCompensationType,
+    offered_service: null as number | null,
     note: '',
   };
 
@@ -341,21 +415,29 @@ export class ServiceDetailPageComponent {
 
     this.error.set('');
     this.success.set('');
+
+    if (
+      this.bookingForm.compensation_type === 'service' &&
+      !this.bookingForm.offered_service
+    ) {
+      this.error.set('Choose one of your services to offer for the swap.');
+      return;
+    }
     this.bookingBusy.set(true);
 
     this.api
       .createBooking({
         service: currentService.id,
-        scheduled_for: this.bookingForm.scheduled_for
-          ? new Date(this.bookingForm.scheduled_for).toISOString()
-          : null,
+        compensation_type: this.bookingForm.compensation_type,
+        offered_service: this.bookingForm.offered_service,
         note: this.bookingForm.note,
       })
       .subscribe({
         next: () => {
           this.bookingBusy.set(false);
+          this.bookingForm.compensation_type = 'money';
+          this.bookingForm.offered_service = null;
           this.bookingForm.note = '';
-          this.bookingForm.scheduled_for = '';
           this.success.set('Booking request sent. You can track it from the dashboard.');
         },
         error: (error) => {
@@ -426,9 +508,13 @@ export class ServiceDetailPageComponent {
     forkJoin({
       service: this.api.getService(id),
       categories: this.api.getCategories(),
+      myServices: this.auth.isAuthenticated()
+        ? this.api.getMyServices().pipe(catchError(() => of([])))
+        : of([]),
     }).subscribe({
-      next: ({ service, categories }) => {
+      next: ({ service, categories, myServices }) => {
         this.categories.set(categories);
+        this.myServices.set(myServices);
         this.applyService(service);
       },
       error: (error) => {
@@ -446,5 +532,20 @@ export class ServiceDetailPageComponent {
     this.editForm.price = service.price;
     this.editForm.location = service.location;
     this.editForm.is_active = service.is_active;
+    this.syncExchangeOfferSelection();
+  }
+
+  private syncExchangeOfferSelection(): void {
+    const offeredServiceIds = new Set(this.availableExchangeServices().map((service) => service.id));
+    if (
+      this.bookingForm.offered_service !== null &&
+      !offeredServiceIds.has(this.bookingForm.offered_service)
+    ) {
+      this.bookingForm.offered_service = null;
+    }
+
+    if (this.bookingForm.compensation_type === 'service' && offeredServiceIds.size === 0) {
+      this.bookingForm.compensation_type = 'money';
+    }
   }
 }

@@ -42,4 +42,52 @@
   <main class="page-shell">
     <router-outlet />
   </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand-block">
+        <a class="brand footer-brand-link" routerLink="/services">
+          <span class="brand-mark">S</span>
+          <span class="brand-copy">
+            <strong>SkillSwap</strong>
+            <small>Talent marketplace</small>
+          </span>
+        </a>
+        <p class="footer-note">
+          A simple marketplace for booking services, offering skill swaps, and keeping work in one
+          place.
+        </p>
+      </div>
+
+      <div class="footer-link-grid">
+        <div class="footer-column">
+          <h3>Marketplace</h3>
+          <a routerLink="/services">Browse services</a>
+          <a routerLink="/services">Find talent</a>
+        </div>
+
+        <div class="footer-column">
+          <h3>Account</h3>
+          @if (auth.isAuthenticated()) {
+            <a routerLink="/dashboard">Dashboard</a>
+            <a routerLink="/dashboard/services/new">Create service</a>
+          } @else {
+            <a routerLink="/login">Log in</a>
+            <a routerLink="/login">Create account</a>
+          }
+        </div>
+
+        <div class="footer-column">
+          <h3>Product</h3>
+          <span>Live booking chat</span>
+          <span>Reviews after completion</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© {{ currentYear }} SkillSwap</p>
+      <p>Built for clients, executives, and independent specialists.</p>
+    </div>
+  </footer>
 </div>

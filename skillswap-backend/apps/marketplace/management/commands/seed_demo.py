@@ -133,6 +133,8 @@ class Command(BaseCommand):
             service=service_map["Small business workflow automation"],
             client=user_map["timur"],
             defaults={
+                "compensation_type": Booking.CompensationType.SERVICE,
+                "offered_service": service_map["One-hour calculus tutoring"],
                 "status": Booking.Status.PENDING,
                 "scheduled_for": timezone.now() + timedelta(days=5),
                 "note": "Want to automate intake requests from Google Forms.",

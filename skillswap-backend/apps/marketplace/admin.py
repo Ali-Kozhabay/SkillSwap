@@ -18,9 +18,21 @@ class ServiceAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ("service", "client", "status", "scheduled_for", "created_at")
-    list_filter = ("status",)
-    search_fields = ("service__title", "client__username")
+    list_display = (
+        "service",
+        "client",
+        "compensation_type",
+        "offered_service",
+        "status",
+        "scheduled_for",
+        "created_at",
+    )
+    list_filter = ("status", "compensation_type")
+    search_fields = (
+        "service__title",
+        "offered_service__title",
+        "client__username",
+    )
 
 
 @admin.register(Message)

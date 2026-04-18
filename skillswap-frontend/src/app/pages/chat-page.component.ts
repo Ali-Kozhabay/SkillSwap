@@ -54,9 +54,12 @@ type ChatConnectionState = 'connecting' | 'live' | 'reconnecting' | 'offline';
           <aside class="panel sidebar-card stack-md">
             <p class="eyebrow">Booking context</p>
             <h2>Project details</h2>
-            <p>
-              <strong>Scheduled for:</strong>
-              {{ currentBooking.scheduled_for ? (currentBooking.scheduled_for | date:'medium') : 'Flexible schedule' }}
+            <p><strong>Compensation:</strong>
+              @if (currentBooking.compensation_type === 'service') {
+                {{ currentBooking.offered_service?.title || 'Service swap offer attached.' }}
+              } @else {
+                {{ currentBooking.service.price | currency:'KZT ':'symbol':'1.0-0' }}
+              }
             </p>
             <p><strong>Booking note:</strong> {{ currentBooking.note || 'No booking note provided.' }}</p>
             <p class="muted">Messages now sync instantly between the client and executive.</p>

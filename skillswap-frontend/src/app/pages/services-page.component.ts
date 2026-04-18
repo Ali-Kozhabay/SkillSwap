@@ -8,6 +8,7 @@ import { formatApiError } from '../core/api-error';
 import { AuthService } from '../core/auth.service';
 import { Category, Service } from '../core/models';
 import { MarketplaceService } from '../core/marketplace.service';
+import { renderStars } from '../core/rating';
 
 @Component({
   selector: 'app-services-page',
@@ -124,9 +125,17 @@ import { MarketplaceService } from '../core/marketplace.service';
 
               <div class="chip-row">
                 <span class="badge">{{ service.category.name }}</span>
-                <span class="metric-pill">
-                  {{ service.average_rating ?? 'New' }} @if (service.review_count) { / {{ service.review_count }} reviews }
-                </span>
+                @if (service.average_rating !== null) {
+                  <span class="metric-pill rating-pill">
+                    <span class="rating-stars">{{ renderStars(service.average_rating) }}</span>
+                    <span class="rating-meta">
+                      {{ service.average_rating | number:'1.1-1' }} ·
+                      {{ service.review_count }} review{{ service.review_count === 1 ? '' : 's' }}
+                    </span>
+                  </span>
+                } @else {
+                  <span class="metric-pill">New listing</span>
+                }
               </div>
 
               <div class="stack-md">
@@ -150,35 +159,6 @@ import { MarketplaceService } from '../core/marketplace.service';
                 }
               </div>
             </article>
-          }
-        </div>
-      </section>
-
-      <div class="trusted-strip">
-        <strong>Built for client teams, executive operators, and solo specialists</strong>
-        <div class="trusted-logos">
-          @for (brand of trustedBrands; track brand) {
-            <span>{{ brand }}</span>
-          }
-        </div>
-      </div>
-
-      <section class="section-shell">
-        <div class="section-header">
-          <div class="stack-md">
-            <p class="eyebrow">Browse by category</p>
-            <h2>Find specialists for every kind of work.</h2>
-            <p>Click a category to filter the marketplace for client, executive, or project work.</p>
-          </div>
-          <button class="ghost-button" type="button" (click)="clearFilters()">View all</button>
-        </div>
-
-        <div class="category-grid">
-          @for (category of categories(); track category.id) {
-            <button class="category-tile" type="button" (click)="chooseCategory(category.id)">
-              <h3>{{ category.name }}</h3>
-              <p class="muted">{{ category.description || 'Search specialists in this category.' }}</p>
-            </button>
           }
         </div>
       </section>
@@ -250,6 +230,7 @@ import { MarketplaceService } from '../core/marketplace.service';
 export class ServicesPageComponent {
   private readonly api = inject(MarketplaceService);
   readonly auth = inject(AuthService);
+  readonly renderStars = renderStars;
 
   readonly services = signal<Service[]>([]);
   readonly categories = signal<Category[]>([]);
@@ -273,7 +254,6 @@ export class ServicesPageComponent {
     },
   ];
 
-  readonly trustedBrands = ['Northline', 'Moss Studio', 'Pilot Labs', 'Aster', 'Verve'];
   readonly filters = {
     search: '',
     category: '',

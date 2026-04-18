@@ -49,10 +49,26 @@ class Booking(models.Model):
         ACCEPTED = "accepted", "Accepted"
         COMPLETED = "completed", "Completed"
 
+    class CompensationType(models.TextChoices):
+        MONEY = "money", "Money"
+        SERVICE = "service", "Service swap"
+
     service = models.ForeignKey(
         Service,
         related_name="bookings",
         on_delete=models.CASCADE,
+    )
+    compensation_type = models.CharField(
+        max_length=20,
+        choices=CompensationType.choices,
+        default=CompensationType.MONEY,
+    )
+    offered_service = models.ForeignKey(
+        Service,
+        related_name="offered_in_bookings",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
     client = models.ForeignKey(
         settings.AUTH_USER_MODEL,
