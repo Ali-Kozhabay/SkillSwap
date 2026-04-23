@@ -56,6 +56,15 @@ class Command(BaseCommand):
                 "location": "Shymkent",
                 "bio": "Freelance automation specialist for solo businesses.",
             },
+            {
+                "username": "ayana",
+                "email": "ayana@example.com",
+                "password": "demo12345",
+                "first_name": "Ayana",
+                "last_name": "Serik",
+                "location": "Almaty",
+                "bio": "Marketing strategist building practical content systems for small brands.",
+            },
         ]
 
         user_map = {}
@@ -97,6 +106,42 @@ class Command(BaseCommand):
                 "description": "I map your repetitive workflow and build a simple automation stack around it.",
                 "price": "25000.00",
                 "location": "Remote",
+            },
+            {
+                "owner": user_map["alina"],
+                "category": category_map["design"],
+                "title": "Brand identity mini sprint",
+                "summary": "A fast visual direction pack for early-stage teams.",
+                "description": "I create a lightweight brand direction with mood, color, typography, and key visual rules.",
+                "price": "32000.00",
+                "location": "Almaty or remote",
+            },
+            {
+                "owner": user_map["timur"],
+                "category": category_map["tutoring"],
+                "title": "SAT math crash prep",
+                "summary": "Targeted drills for algebra, problem solving, and timing strategy.",
+                "description": "We diagnose weak areas, solve timed sets together, and finish with a focused revision plan.",
+                "price": "15000.00",
+                "location": "Astana or remote",
+            },
+            {
+                "owner": user_map["madi"],
+                "category": category_map["tech-help"],
+                "title": "CRM and inbox automation audit",
+                "summary": "Find manual bottlenecks in your lead handling workflow.",
+                "description": "I review your current CRM, forms, and inbox process and outline quick automation wins you can ship fast.",
+                "price": "21000.00",
+                "location": "Remote",
+            },
+            {
+                "owner": user_map["ayana"],
+                "category": category_map["marketing"],
+                "title": "Monthly content calendar setup",
+                "summary": "A practical posting plan for Instagram, LinkedIn, or TikTok.",
+                "description": "I build a one-month content calendar with hooks, posting themes, and a lightweight execution workflow.",
+                "price": "19000.00",
+                "location": "Almaty or remote",
             },
         ]
 
